@@ -523,8 +523,8 @@ class Mailbox {
 			? trim($partStructure->id, " <>")
 			: (isset($params['filename']) || isset($params['name']) ? mt_rand() . mt_rand() : null);
 
-		if($attachmentId) {
-			if(empty($params['filename']) && empty($params['name'])) {
+		if ($attachmentId) {
+			if (empty($params['filename']) && empty($params['name'])) {
 				$fileName = $attachmentId . '.' . strtolower($partStructure->subtype);
 			}
 			else {
@@ -532,44 +532,41 @@ class Mailbox {
 				$fileName = $this->decodeMimeStr($fileName, $this->serverEncoding);
 				$fileName = $this->decodeRFC2231($fileName, $this->serverEncoding);
 			}
-			$attachment = new IncomingMailAttachment();
-			$attachment->id = $attachmentId;
-			$attachment->name = $fileName;
-			$attachment->subtype =  $partStructure->subtype;
-			$attachment->disposition   = (isset($partStructure->disposition) ? $partStructure->disposition : null);
-			$attachment->partStructure = $partStructure;
-			if($this->attachmentsDir) {
-				$replace = array(
-					'/\s/' => '_',
-					'/[^0-9a-zа-яіїє_\.]/iu' => '',
-					'/_+/' => '_',
-					'/(^_)|(_$)/' => '',
-				);
-				$fileSysName = preg_replace('~[\\\\/]~', '', $mail->id . '_' . $attachmentId . '_' . preg_replace(array_keys($replace), $replace, $fileName));
-				$attachment->filePath = $this->attachmentsDir . DIRECTORY_SEPARATOR . $fileSysName;
-				file_put_contents($attachment->filePath, $data);
+
+            $attachment                = new IncomingMailAttachment();
+            $attachment->id            = $attachmentId;
+            $attachment->name          = $fileName;
+            $attachment->subtype       = $partStructure->subtype;
+            $attachment->disposition   = (isset($partStructure->disposition) ? $partStructure->disposition : null);
+            $attachment->email_id      = $mail->id;
+            $attachment->data          = $data;
+            $attachment->partStructure = $partStructure;
+
+			if ($this->attachmentsDir) {
+				$attachment->save($this->attachmentsDir);
 			}
+
 			$mail->addAttachment($attachment);
 		}
 		else {
-			if(!empty($params['charset'])) {
+			if (!empty($params['charset'])) {
 				$data = $this->convertStringEncoding($data, $params['charset'], $this->serverEncoding);
 			}
-			if($partStructure->type == 0 && $data) {
-				if(strtolower($partStructure->subtype) == 'plain') {
+			if ($partStructure->type == 0 && $data) {
+				if (strtolower($partStructure->subtype) == 'plain') {
 					$mail->textPlain .= $data;
 				}
 				else {
 					$mail->textHtml .= $data;
 				}
 			}
-			elseif($partStructure->type == 2 && $data) {
+			elseif ($partStructure->type == 2 && $data) {
 				$mail->textPlain .= trim($data);
 			}
 		}
-		if(!empty($partStructure->parts)) {
+		if (!empty($partStructure->parts)) {
 			foreach($partStructure->parts as $subPartNum => $subPartStructure) {
-				if($partStructure->type == 2 && $partStructure->subtype == 'RFC822') {
+				if ($partStructure->type == 2 && $partStructure->subtype == 'RFC822') {
 					$this->initMailPart($mail, $subPartStructure, $partNum, $markAsSeen);
 				}
 				else {

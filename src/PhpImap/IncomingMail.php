@@ -66,5 +66,23 @@ class IncomingMailAttachment {
 	public $filePath;
 	public $subtype;
 	public $disposition;
+	public $email_id;
+	public $data;
 	public $partStructure;
+
+	public function save($dir, $prefix = '')
+	{
+		$replace = array(
+			'/\s/' => '_',
+			'/[^0-9a-zа-яіїє_\.]/iu' => '',
+			'/_+/' => '_',
+			'/(^_)|(_$)/' => '',
+		);
+
+		$fileSysName = $prefix . preg_replace('~[\\\\/]~', '', $this->email_id . '_' . $this->id . '_' . preg_replace(array_keys($replace), $replace, $this->name));
+
+		$this->filePath = $dir . DIRECTORY_SEPARATOR  .$fileSysName;
+
+		file_put_contents($this->filePath, $this->data);
+	}
 }
