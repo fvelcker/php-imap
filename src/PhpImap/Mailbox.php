@@ -21,7 +21,7 @@ class Mailbox {
 
 	/**
          * @param string $imapPath
-         * @param string $login
+         * @param string $loginaddA
          * @param string $password
          * @param string $attachmentsDir
          * @param string $serverEncoding
@@ -192,7 +192,7 @@ class Mailbox {
 	public function moveMail($mailId, $mailBox) {
 		return imap_mail_move($this->getImapStream(), $mailId, $mailBox, CP_UID) && $this->expungeDeletedMails();
 	}
-	
+
 	/**
 	 * Copys mails listed in mailId into new mailbox
 	 * @return bool
@@ -402,7 +402,7 @@ class Mailbox {
 		}
 		return $quota;
 	}
-	
+
 	/**
 	 * Get raw mail data
 	 *
@@ -415,7 +415,7 @@ class Mailbox {
         	if(!$markAsSeen) {
             		$options |= FT_PEEK;
         	}
-        	
+
 		return imap_fetchbody($this->getImapStream(), $msgId, '', $options);
 	}
 
@@ -465,13 +465,13 @@ class Mailbox {
 			$mail->messageId = $head->message_id;
 		}
 
-		$mailStructure = imap_fetchstructure($this->getImapStream(), $mailId, FT_UID);
+		$mail->mailStructure = imap_fetchstructure($this->getImapStream(), $mailId, FT_UID);
 
-		if(empty($mailStructure->parts)) {
-			$this->initMailPart($mail, $mailStructure, 0, $markAsSeen);
+		if(empty($mail->mailStructure->parts)) {
+			$this->initMailPart($mail, $mail->mailStructure, 0, $markAsSeen);
 		}
 		else {
-			foreach($mailStructure->parts as $partNum => $partStructure) {
+			foreach($mail->mailStructure->parts as $partNum => $partStructure) {
 				$this->initMailPart($mail, $partStructure, $partNum + 1, $markAsSeen);
 			}
 		}
@@ -535,7 +535,9 @@ class Mailbox {
 			$attachment = new IncomingMailAttachment();
 			$attachment->id = $attachmentId;
 			$attachment->name = $fileName;
-			$attachment->disposition = (isset($partStructure->disposition) ? $partStructure->disposition : null);
+			$attachment->subtype =  $partStructure->subtype;
+			$attachment->disposition   = (isset($partStructure->disposition) ? $partStructure->disposition : null);
+			$attachment->partStructure = $partStructure;
 			if($this->attachmentsDir) {
 				$replace = array(
 					'/\s/' => '_',

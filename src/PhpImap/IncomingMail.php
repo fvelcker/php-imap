@@ -22,6 +22,8 @@ class IncomingMail {
 
 	public $textPlain;
 	public $textHtml;
+	public $mailStructure;
+
 	/** @var IncomingMailAttachment[] */
 	protected $attachments = array();
 
@@ -62,5 +64,7 @@ class IncomingMailAttachment {
 	public $id;
 	public $name;
 	public $filePath;
+	public $subtype;
 	public $disposition;
+	public $partStructure;
 }
